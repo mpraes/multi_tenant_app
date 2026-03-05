@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+*.env.local
+
+# Database (dev only — never commit)
+*.db
+*.sqlite3
+chroma_data/
+
+# Logs
+logs/
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Docker volumes (if mounted locally)
+postgres_data/
+redis_data/

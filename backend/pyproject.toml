@@ -1,0 +1,12 @@
+# Build system and metadata for the backend framework package.
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multi-tenant-app"
+version = "0.1.0"
+description = "Backend multi-tenant app for a single chatbot product customized per customer."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []

@@ -1,0 +1,83 @@
+# ════════════════════════════════════════════════════════════════════════════
+#  docker-compose.yml — local development + quick staging deploys
+#
+#  Usage:
+#    cp backend/.env.example backend/.env && nano backend/.env
+#    docker-compose -f infra/docker/docker-compose.yml up --build
+#
+#  For production use the k8s/ manifests or terraform/ instead.
+# ════════════════════════════════════════════════════════════════════════════
+
+version: "3.9"
+
+services:
+
+  # ── Backend API ─────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../../backend/.env
+    environment:
+      # Override DB to point to the postgres service below
+      DATABASE_URL: postgresql+asyncpg://chatbot:chatbot@postgres:5432/chatbot
+      REDIS_URL: redis://redis:6379/0
+    volumes:
+      # Hot-reload in dev — remove in production
+      - ../../backend/src:/app/src:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── PostgreSQL ───────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: chatbot
+      POSTGRES_PASSWORD: chatbot
+      POSTGRES_DB: chatbot
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"          # expose for local DB tools
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chatbot"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ── Redis (session cache, optional) ─────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # ── Ollama (local LLM, optional) ─────────────────────────────────────────────
+  # Uncomment if you want a fully offline setup with no OpenAI dependency.
+  # Set LLM_PROVIDER=ollama in your .env
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   environment:
+  #     OLLAMA_KEEP_ALIVE: "24h"
+
+volumes:
+  postgres_data:
+  redis_data:
+  # ollama_data:

@@ -1,0 +1,6 @@
+# Local container orchestration example for WhatsApp bot dependencies.
+version: "3.9"
+services:
+  app:
+    image: python:3.12-slim
+    command: ["python", "main.py"]
