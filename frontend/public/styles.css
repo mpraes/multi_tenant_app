@@ -1,0 +1,575 @@
+/* ── Fluent / Teams-inspired design system ─────────────────────────────────── */
+
+:root {
+	/* Brand */
+	--teams-purple:       #6264A7;
+	--teams-purple-dark:  #464775;
+	--teams-purple-light: #E8E8F4;
+	--teams-purple-hover: #D3D3EB;
+
+	/* Neutrals */
+	--bg:          #F5F5F5;
+	--surface:     #FFFFFF;
+	--surface-2:   #F0F0F0;
+	--sidebar-bg:  #F3F2F1;
+
+	/* Text */
+	--text:        #252423;
+	--text-sub:    #605E5C;
+	--text-inv:    #FFFFFF;
+
+	/* Borders */
+	--border:      #E1DFDD;
+	--border-2:    #C8C6C4;
+
+	/* Status */
+	--success:     #107C10;
+	--warning:     #FFB900;
+	--danger:      #C4314B;
+	--pending:     #8A8886;
+
+	/* Elevation */
+	--shadow-sm:   0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+
+	/* Radii — Fluent uses small radii */
+	--radius:    4px;
+	--radius-md: 6px;
+	--radius-lg: 8px;
+
+	/* Layout */
+	--sidebar-w: 320px;
+}
+
+/* ── Reset ───────────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; }
+
+body {
+	font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+	font-size: 14px;
+	line-height: 1.5;
+	color: var(--text);
+	background: var(--bg);
+}
+
+button, input, textarea, select { font: inherit; }
+h1, h2, h3 { margin: 0; font-weight: 600; }
+
+/* ── Shell layout ────────────────────────────────────────────────────────────── */
+
+.shell {
+	display: grid;
+	grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+	height: 100vh;
+	overflow: hidden;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────────── */
+
+.sidebar {
+	background: var(--sidebar-bg);
+	border-right: 1px solid var(--border);
+	display: flex;
+	flex-direction: column;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+/* ── Brand card ──────────────────────────────────────────────────────────────── */
+
+.brand-card {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 13px 16px;
+	background: var(--teams-purple);
+	color: var(--text-inv);
+	flex-shrink: 0;
+}
+
+.brand-mark {
+	display: grid;
+	place-items: center;
+	width: 34px;
+	height: 34px;
+	border-radius: var(--radius-md);
+	background: rgba(255,255,255,0.22);
+	font-size: 0.75rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	flex-shrink: 0;
+}
+
+.brand-card .eyebrow {
+	margin: 0 0 1px;
+	font-size: 0.67rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	opacity: 0.72;
+}
+
+.brand-card h1 { font-size: 0.95rem; }
+
+/* ── Panels ──────────────────────────────────────────────────────────────────── */
+
+.panel {
+	padding: 12px 16px;
+	border-bottom: 1px solid var(--border);
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.panel-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.panel h2 {
+	font-size: 0.72rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: var(--text-sub);
+}
+
+.panel-actions {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+/* ── Fields ──────────────────────────────────────────────────────────────────── */
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.field > span {
+	font-size: 0.75rem;
+	font-weight: 600;
+	color: var(--text-sub);
+}
+
+.field input,
+.field textarea,
+.field select {
+	width: 100%;
+	border: 1px solid var(--border-2);
+	border-radius: var(--radius);
+	background: var(--surface);
+	color: var(--text);
+	padding: 5px 9px;
+	outline: none;
+	transition: border-color 0.12s, box-shadow 0.12s;
+	font-size: 0.875rem;
+}
+
+.field input:hover,
+.field textarea:hover,
+.field select:hover {
+	border-color: var(--teams-purple);
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+	border-color: var(--teams-purple);
+	box-shadow: 0 0 0 2px rgba(98,100,167,0.18);
+}
+
+.field select {
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23605E5C' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 9px center;
+	padding-right: 26px;
+}
+
+.field-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+
+.field-inline {
+	flex-direction: row;
+	align-items: center;
+	gap: 8px;
+}
+
+.field-inline input[type="checkbox"] {
+	width: 16px;
+	height: 16px;
+	accent-color: var(--teams-purple);
+	cursor: pointer;
+	flex-shrink: 0;
+	margin: 0;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────────── */
+
+.button {
+	border: 1px solid transparent;
+	border-radius: var(--radius);
+	padding: 5px 16px;
+	font-size: 0.875rem;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 0.1s, border-color 0.1s;
+	white-space: nowrap;
+}
+
+.button:disabled { opacity: 0.38; cursor: not-allowed; }
+
+.button.primary {
+	background: var(--teams-purple);
+	color: var(--text-inv);
+}
+.button.primary:hover:not(:disabled) { background: var(--teams-purple-dark); }
+
+.button.secondary {
+	background: var(--surface);
+	border-color: var(--teams-purple);
+	color: var(--teams-purple);
+}
+.button.secondary:hover:not(:disabled) { background: var(--teams-purple-light); }
+
+.button.ghost {
+	background: transparent;
+	border-color: var(--border-2);
+	color: var(--text);
+}
+.button.ghost:hover:not(:disabled) { background: var(--surface-2); }
+
+/* ── Health badge ────────────────────────────────────────────────────────────── */
+
+.health-badge {
+	padding: 2px 9px;
+	border-radius: 12px;
+	font-size: 0.7rem;
+	font-weight: 600;
+	text-transform: lowercase;
+}
+
+.health-badge.idle,
+.health-badge.pending,
+.health-badge.saved {
+	background: rgba(138,136,134,0.14);
+	color: var(--pending);
+}
+.health-badge.healthy {
+	background: rgba(16,124,16,0.1);
+	color: var(--success);
+}
+.health-badge.error {
+	background: rgba(196,49,75,0.1);
+	color: var(--danger);
+}
+
+/* ── Quick-action chips ──────────────────────────────────────────────────────── */
+
+.quick-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+
+.quick-action {
+	padding: 4px 12px;
+	border: 1px solid var(--border-2);
+	border-radius: 16px;
+	cursor: pointer;
+	background: var(--surface);
+	color: var(--text);
+	font-size: 0.8rem;
+	font-weight: 500;
+	transition: background 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.quick-action:hover {
+	background: var(--teams-purple-light);
+	border-color: var(--teams-purple);
+	color: var(--teams-purple);
+}
+
+/* ── Meta list ───────────────────────────────────────────────────────────────── */
+
+.meta-list {
+	margin: 0;
+	display: grid;
+	gap: 6px;
+}
+
+.meta-list div {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 8px;
+}
+
+.meta-list dt {
+	color: var(--text-sub);
+	font-size: 0.72rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	flex-shrink: 0;
+}
+
+.meta-list dd {
+	margin: 0;
+	font-size: 0.8rem;
+	text-align: right;
+	word-break: break-all;
+}
+
+code {
+	font-family: "Cascadia Code", "Consolas", monospace;
+	font-size: 0.78rem;
+	background: var(--surface-2);
+	padding: 1px 5px;
+	border-radius: var(--radius);
+	border: 1px solid var(--border);
+}
+
+/* ── Config panel ────────────────────────────────────────────────────────────── */
+
+.config-panel { flex-direction: column; gap: 10px; }
+.config-form  { display: flex; flex-direction: column; gap: 10px; }
+
+/* ── Chat layout ─────────────────────────────────────────────────────────────── */
+
+.chat-layout {
+	display: grid;
+	grid-template-rows: auto 1fr auto auto;
+	height: 100vh;
+	overflow: hidden;
+	background: var(--surface);
+}
+
+/* ── Chat header ─────────────────────────────────────────────────────────────── */
+
+.chat-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 10px 20px;
+	border-bottom: 1px solid var(--border);
+	background: var(--surface);
+	flex-shrink: 0;
+}
+
+.chat-header .eyebrow {
+	margin: 0 0 1px;
+	font-size: 0.67rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text-sub);
+}
+
+.chat-header h2 { font-size: 1rem; }
+
+/* ── Messages ────────────────────────────────────────────────────────────────── */
+
+.chat-messages {
+	overflow-y: auto;
+	padding: 12px 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.message {
+	display: flex;
+	gap: 10px;
+	align-items: flex-start;
+	padding: 3px 0;
+	animation: fade-in 0.14s ease;
+}
+
+.user-message { flex-direction: row-reverse; }
+
+.avatar {
+	display: grid;
+	place-items: center;
+	flex-shrink: 0;
+	width: 32px;
+	height: 32px;
+	border-radius: 50%;
+	font-size: 0.67rem;
+	font-weight: 700;
+	color: var(--text-inv);
+	background: var(--teams-purple);
+	margin-top: 2px;
+}
+
+.user-message .avatar { background: #8764B8; }
+
+.bubble-wrap {
+	max-width: min(680px, 76%);
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.user-message .bubble-wrap { align-items: flex-end; }
+
+.bubble {
+	margin: 0;
+	padding: 8px 12px;
+	border-radius: var(--radius-lg);
+	line-height: 1.55;
+	font-size: 0.9rem;
+	background: var(--surface-2);
+	border: 1px solid var(--border);
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.user-message .bubble {
+	background: var(--teams-purple);
+	color: var(--text-inv);
+	border-color: transparent;
+	border-bottom-right-radius: var(--radius);
+}
+
+.assistant-message .bubble {
+	border-bottom-left-radius: var(--radius);
+}
+
+.message-meta {
+	color: var(--text-sub);
+	font-size: 0.67rem;
+	padding: 0 2px;
+}
+
+/* ── Typing indicator ────────────────────────────────────────────────────────── */
+
+.typing-indicator {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 2px 20px 4px;
+	color: var(--text-sub);
+	font-size: 0.8rem;
+}
+
+.typing-indicator span {
+	width: 6px;
+	height: 6px;
+	border-radius: 50%;
+	background: var(--teams-purple);
+	opacity: 0.55;
+	animation: teams-bounce 1.3s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(2) { animation-delay: 0.16s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.32s; }
+.typing-indicator p { margin: 0; }
+
+.hidden { display: none !important; }
+
+/* ── Composer ────────────────────────────────────────────────────────────────── */
+
+.composer {
+	padding: 10px 16px 14px;
+	border-top: 1px solid var(--border);
+	background: var(--surface);
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.composer textarea {
+	resize: none;
+	width: 100%;
+	min-height: 50px;
+	max-height: 150px;
+	border: 1px solid var(--border-2);
+	border-radius: var(--radius-md);
+	background: var(--surface);
+	color: var(--text);
+	padding: 8px 12px;
+	outline: none;
+	transition: border-color 0.12s, box-shadow 0.12s;
+	font-size: 0.9rem;
+	line-height: 1.5;
+}
+
+.composer textarea:focus {
+	border-color: var(--teams-purple);
+	box-shadow: 0 0 0 2px rgba(98,100,167,0.18);
+}
+
+.composer-footer {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.char-count {
+	font-size: 0.7rem;
+	color: var(--text-sub);
+}
+
+/* ── Accessibility ───────────────────────────────────────────────────────────── */
+
+.sr-only {
+	position: absolute;
+	width: 1px; height: 1px;
+	padding: 0; margin: -1px;
+	overflow: hidden;
+	clip: rect(0,0,0,0);
+	white-space: nowrap;
+	border: 0;
+}
+
+/* ── Animations ──────────────────────────────────────────────────────────────── */
+
+@keyframes fade-in {
+	from { opacity: 0; transform: translateY(3px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes teams-bounce {
+	0%, 60%, 100% { transform: translateY(0); opacity: 0.55; }
+	30%            { transform: translateY(-5px); opacity: 1; }
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+	.shell {
+		grid-template-columns: 1fr;
+		height: auto;
+		overflow: visible;
+	}
+
+	.sidebar {
+		border-right: none;
+		border-bottom: 1px solid var(--border);
+	}
+
+	.chat-layout { height: 100svh; }
+}
+
+@media (max-width: 600px) {
+	:root { --sidebar-w: 100vw; }
+
+	.chat-header,
+	.chat-messages,
+	.composer {
+		padding-left: 12px;
+		padding-right: 12px;
+	}
+
+	.bubble-wrap { max-width: 90%; }
+}

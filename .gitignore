@@ -11,6 +11,9 @@ build/
 .env
 *.env.local
 
+# Runtime bot config overrides (CLI / frontend) — gitignore; commit settings.py instead
+backend/config.json
+
 # Database (dev only — never commit)
 *.db
 *.sqlite3
@@ -20,6 +23,9 @@ chroma_data/
 logs/
 *.log
 
+# make run PIDs and logs
+.run/
+
 # IDE
 .idea/
 .vscode/
@@ -28,3 +34,5 @@ logs/
 # Docker volumes (if mounted locally)
 postgres_data/
 redis_data/
+
+CLAUDE.md

@@ -32,21 +32,26 @@ class MessageMiddleware(Protocol):
 
 
 class LoggingMiddleware:
-    """Logs every incoming message and outgoing reply with tenant/session context."""
+    """
+    Registra cada mensagem recebida e resposta enviada.
+    Logs every incoming message and outgoing reply.
+    """
 
     async def before(self, ctx: ConversationContext) -> None:
         from src.utils.logging import get_logger
         logger = get_logger("middleware.logging")
         logger.info(
-            "[%s] session=%s user=%s | IN: %s",
-            ctx.tenant_slug, ctx.message.session_id,
-            ctx.message.user_id, ctx.message.text[:120],
+            "session=%s user=%s | IN: %s",
+            ctx.message.session_id,
+            ctx.message.user_id,
+            ctx.message.text[:120],
         )
 
     async def after(self, ctx: ConversationContext, reply_text: str) -> None:
         from src.utils.logging import get_logger
         logger = get_logger("middleware.logging")
         logger.info(
-            "[%s] session=%s | OUT: %s",
-            ctx.tenant_slug, ctx.message.session_id, reply_text[:120],
+            "session=%s | OUT: %s",
+            ctx.message.session_id,
+            reply_text[:120],
         )

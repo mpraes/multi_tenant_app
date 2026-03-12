@@ -20,16 +20,19 @@ class ConversationContext:
     """
     message: Message
     history: list[ConversationTurn] = field(default_factory=list)
-    # Populated by the tenant middleware from customers/loader.py
-    tenant_config: Any = None       # TenantConfig | None
-    # Populated by RAG retrieval step (if enabled for this tenant)
+    # Contexto recuperado pelo RAG (se habilitado) / Context retrieved by RAG (if enabled)
     retrieved_context: str = ""
-    # Arbitrary key-value bag for middleware/flow data
+    # Bag livre para dados de middleware/fluxo / Arbitrary bag for middleware/flow data
     state: dict[str, Any] = field(default_factory=dict)
 
     @property
-    def tenant_slug(self) -> str:
-        return self.message.tenant_slug
+    def config(self):
+        """
+        Configuração do bot para esta instância.
+        Bot configuration for this instance.
+        """
+        from src.config.settings import CONFIG
+        return CONFIG
 
     def add_turn(self, role: MessageRole, content: str) -> None:
         self.history.append(ConversationTurn(role=role, content=content))

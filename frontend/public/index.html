@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Chatbot</title>
+	<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+	<div class="shell">
+		<aside class="sidebar">
+			<div class="brand-card">
+				<div class="brand-mark">CB</div>
+				<div>
+					<p class="eyebrow">Frontend minimo</p>
+					<h1>Chatbot</h1>
+				</div>
+			</div>
+
+			<div class="panel connection-panel">
+				<div class="panel-header">
+					<h2>Conexao</h2>
+					<span id="healthBadge" class="health-badge idle">nao verificado</span>
+				</div>
+
+				<label class="field">
+					<span>API base URL</span>
+					<input id="apiUrl" type="text" value="http://localhost:8000" autocomplete="off">
+				</label>
+
+				<label class="field">
+					<span>User ID</span>
+					<input id="userId" type="text" value="web-user" autocomplete="off">
+				</label>
+
+				<div class="panel-actions">
+					<button id="saveSettings" class="button secondary" type="button">Salvar</button>
+					<button id="checkHealth" class="button ghost" type="button">Testar API</button>
+				</div>
+			</div>
+
+			<div class="panel info-panel">
+				<h2>Atalhos</h2>
+				<div class="quick-actions">
+					<button class="quick-action" data-message="ola">Saudacao</button>
+					<button class="quick-action" data-message="quais servicos voces oferecem?">Servicos</button>
+					<button class="quick-action" data-message="preciso falar com suporte">Suporte</button>
+				</div>
+				<dl class="meta-list">
+					<div>
+						<dt>Endpoint</dt>
+						<dd><code>POST /chat</code></dd>
+					</div>
+					<div>
+						<dt>Sessao</dt>
+						<dd id="sessionValue">-</dd>
+					</div>
+				</dl>
+			</div>
+
+			<div class="panel info-panel">
+				<h2>Ferramentas API</h2>
+				<div class="quick-actions">
+					<button id="btnHistory" class="quick-action">Historico</button>
+					<button id="btnSessions" class="quick-action">Sessoes</button>
+					<button id="btnStats" class="quick-action">Stats</button>
+				</div>
+			</div>
+
+			<div class="panel config-panel">
+				<div class="panel-header">
+					<h2>Config do Bot</h2>
+					<button id="toggleConfig" class="button ghost" type="button">editar</button>
+				</div>
+
+				<dl id="configSummary" class="meta-list">
+					<div><dt>nome</dt><dd id="cfgSumName">-</dd></div>
+					<div><dt>provider</dt><dd id="cfgSumProvider">-</dd></div>
+					<div><dt>modelo</dt><dd id="cfgSumModel">-</dd></div>
+				</dl>
+
+				<form id="configForm" class="config-form hidden" autocomplete="off">
+					<label class="field">
+						<span>Nome do bot</span>
+						<input id="cfgName" type="text" placeholder="My Chatbot">
+					</label>
+					<label class="field">
+						<span>System prompt</span>
+						<textarea id="cfgSystemPrompt" rows="3" placeholder="Voce e um assistente..."></textarea>
+					</label>
+					<label class="field">
+						<span>LLM provider</span>
+						<select id="cfgLlmProvider">
+							<option value="">padrao (.env)</option>
+							<option value="openai">openai</option>
+							<option value="azure_openai">azure_openai</option>
+							<option value="ollama">ollama</option>
+							<option value="groq">groq</option>
+							<option value="anthropic">anthropic</option>
+							<option value="bedrock">bedrock</option>
+						</select>
+					</label>
+					<label class="field">
+						<span>Modelo</span>
+						<input id="cfgLlmModel" type="text" placeholder="default do provider">
+					</label>
+					<div class="field-row">
+						<label class="field">
+							<span>Temperatura</span>
+							<input id="cfgTemperature" type="number" min="0" max="2" step="0.1">
+						</label>
+						<label class="field">
+							<span>Max tokens</span>
+							<input id="cfgMaxTokens" type="number" min="64" max="32000" step="64">
+						</label>
+					</div>
+					<label class="field field-inline">
+						<input id="cfgRagEnabled" type="checkbox">
+						<span>RAG ativado</span>
+					</label>
+					<label class="field">
+						<span>Janela de historico (turnos)</span>
+						<input id="cfgHistoryWindow" type="number" min="1" max="100">
+					</label>
+					<div class="panel-actions">
+						<button id="saveConfig" class="button primary" type="button">Salvar</button>
+						<button id="resetConfig" class="button ghost" type="button">Resetar</button>
+					</div>
+				</form>
+			</div>
+		</aside>
+
+		<main class="chat-layout">
+			<header class="chat-header">
+				<div>
+					<p class="eyebrow">Canal web_chat</p>
+					<h2>Conversa de teste</h2>
+				</div>
+				<button id="clearChat" class="button ghost" type="button">Limpar</button>
+			</header>
+
+			<section id="chatMessages" class="chat-messages" aria-live="polite">
+				<article class="message assistant-message">
+					<div class="avatar">AI</div>
+					<div class="bubble-wrap">
+						<p class="bubble">
+							Interface pronta para testar o backend. Ajuste API base URL e user ID na lateral e envie uma mensagem.
+						</p>
+						<span class="message-meta">sistema</span>
+					</div>
+				</article>
+			</section>
+
+			<div id="typingIndicator" class="typing-indicator hidden">
+				<span></span>
+				<span></span>
+				<span></span>
+				<p>aguardando resposta do backend</p>
+			</div>
+
+			<form id="chatForm" class="composer">
+				<label class="sr-only" for="messageInput">Mensagem</label>
+				<textarea id="messageInput" rows="1" maxlength="2000" placeholder="Digite uma mensagem e pressione Enter..."></textarea>
+				<div class="composer-footer">
+					<span id="charCount" class="char-count">0 / 2000</span>
+					<button id="sendButton" class="button primary" type="submit" disabled>Enviar</button>
+				</div>
+			</form>
+		</main>
+	</div>
+
+	<script src="app.js"></script>
+</body>
+</html>

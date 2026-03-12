@@ -1,9 +1,8 @@
 """
+Canal web chat e router FastAPI.
 Web chat channel adapter + FastAPI router.
 
-This is the simplest channel to test locally — no external webhooks needed.
-
-Endpoint:  POST /chat/{tenant_slug}
+Endpoint:  POST /chat
 Payload:   {"user_id": "...", "session_id": "...", "text": "..."}
 Response:  {"text": "...", "session_id": "..."}
 """
@@ -32,13 +31,15 @@ class ChatResponse(BaseModel):
     session_id: str
 
 
-@router.post("/{tenant_slug}", response_model=ChatResponse)
-async def chat(tenant_slug: str, body: ChatRequest) -> ChatResponse:
-    """Main web chat endpoint. One request = one conversational turn."""
+@router.post("", response_model=ChatResponse)
+async def chat(body: ChatRequest) -> ChatResponse:
+    """
+    Endpoint principal de chat. Um request = um turno de conversa.
+    Main web chat endpoint. One request = one conversational turn.
+    """
     session_id = body.session_id or new_session_id()
 
     message = Message(
-        tenant_slug=tenant_slug,
         session_id=session_id,
         user_id=body.user_id,
         text=body.text,
@@ -64,7 +65,6 @@ class WebChatChannel(BaseChannel):
 
     async def parse_incoming(self, raw: dict) -> Message:
         return Message(
-            tenant_slug=raw["tenant_slug"],
             session_id=raw.get("session_id") or new_session_id(),
             user_id=raw["user_id"],
             text=raw["text"],

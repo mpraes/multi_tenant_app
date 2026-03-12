@@ -35,5 +35,4 @@ class Orchestrator:
         return Response(
             text=reply_text,
             session_id=message.session_id,
-            tenant_slug=message.tenant_slug,
         )

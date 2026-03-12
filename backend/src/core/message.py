@@ -1,4 +1,7 @@
-"""Shared message/event types used across channels and the engine."""
+"""
+Tipos de mensagem e evento compartilhados entre canais e a engine.
+Shared message/event types used across channels and the engine.
+"""
 
 from __future__ import annotations
 
@@ -32,11 +35,10 @@ class Message:
     before passing it to the engine. The engine never speaks directly
     to channel types — only to Message objects.
     """
-    tenant_slug: str          # which client ("acme", "globex")
-    session_id: str           # conversation/session identifier
-    user_id: str              # end-user id (channel-specific)
-    text: str                 # raw text content
-    channel: MessageChannel   # origin channel
+    session_id: str          # identificador da conversa / conversation identifier
+    user_id: str             # id do usuário no canal / end-user id (channel-specific)
+    text: str                # conteúdo de texto / raw text content
+    channel: MessageChannel  # canal de origem / origin channel
     role: MessageRole = MessageRole.USER
     timestamp: datetime = field(default_factory=datetime.utcnow)
     metadata: dict[str, Any] = field(default_factory=dict)  # channel extras
@@ -52,7 +54,6 @@ class Response:
     """
     text: str
     session_id: str
-    tenant_slug: str
     metadata: dict[str, Any] = field(default_factory=dict)
 
 

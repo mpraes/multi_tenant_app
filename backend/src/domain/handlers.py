@@ -22,46 +22,47 @@ async def llm_reply(ctx: ConversationContext) -> str:
 
     This is the default handler for any message that doesn't match a flow keyword.
     """
-    tenant = ctx.tenant_config
+    config = ctx.config
 
-    # Pick the right provider: tenant override → global settings
-    provider_slug = tenant.llm_provider if tenant else None
-    provider = get_llm_provider(provider_slug)
+    # Provedor: override em bot_config.py → global settings.py
+    # Provider: bot_config.py override → global settings.py
+    provider = get_llm_provider(config.llm_provider)
 
-    system_prompt = tenant.effective_system_prompt() if tenant else ""
+    system_prompt = config.effective_system_prompt()
     messages = ctx.history_as_openai_messages()
 
-    # If there's RAG context, prepend it to the system prompt
+    # Se houver contexto RAG, prepend ao system prompt / Prepend RAG context if available
     if ctx.retrieved_context:
         system_prompt = (
             f"{system_prompt}\n\n"
-            f"Relevant context retrieved from the knowledge base:\n{ctx.retrieved_context}"
+            f"Contexto relevante recuperado da base de conhecimento:\n{ctx.retrieved_context}"
         )
-
-    temperature = tenant.llm_temperature if tenant else 0.7
-    max_tokens = tenant.llm_max_tokens if tenant else 1024
 
     response = await provider.chat(
         system_prompt=system_prompt,
         messages=messages,
-        temperature=temperature,
-        max_tokens=max_tokens,
+        temperature=config.llm_temperature,
+        max_tokens=config.llm_max_tokens,
     )
 
     logger.debug(
-        "[%s] LLM %s | in=%d out=%d tokens",
-        ctx.tenant_slug, provider.model_name(),
-        response.input_tokens, response.output_tokens,
+        "LLM %s | in=%d out=%d tokens",
+        provider.model_name(),
+        response.input_tokens,
+        response.output_tokens,
     )
 
     return response.text
 
 
 async def greeting(ctx: ConversationContext) -> str:
-    """Triggered on explicit greeting keywords. Can be overridden per tenant."""
+    """
+    Acionado em palavras-chave de saudação.
+    Triggered on explicit greeting keywords.
+    """
     from src.utils.time import greeting_for_hour
     time_greeting = greeting_for_hour()
-    name = ctx.tenant_config.name if ctx.tenant_config else "there"
+    name = ctx.config.name
     return f"{time_greeting}! Welcome to {name}. How can I help you today?"
 
 

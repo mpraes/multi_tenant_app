@@ -29,21 +29,18 @@ def resolve_handler(ctx: ConversationContext) -> HandlerFn:
     Replace or extend with an intent classifier / NLU model as needed.
     """
     text_lower = ctx.message.text.lower().strip()
-    tenant_config = ctx.tenant_config
 
-    # 1. Tenant-specific flows (imported lazily to avoid circular imports)
-    if tenant_config is not None:
-        tenant_flows: dict = getattr(tenant_config, "flows", {})
-        for keyword, handler in tenant_flows.items():
-            if keyword in text_lower:
-                return handler
+    # 1. Fluxos definidos em bot_config.py / Flows defined in bot_config.py
+    for keyword, handler in ctx.config.flows.items():
+        if keyword in text_lower:
+            return handler
 
-    # 2. Domain-level default flows
+    # 2. Fluxos padrão do domínio / Domain-level default flows
     from src.domain.flows import FLOWS as DOMAIN_FLOWS
     for keyword, handler in DOMAIN_FLOWS.items():
         if keyword in text_lower:
             return handler
 
-    # 3. Catch-all fallback
+    # 3. Fallback catch-all
     from src.domain.handlers import fallback
     return fallback

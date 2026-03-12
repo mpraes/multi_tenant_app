@@ -23,9 +23,12 @@ if TYPE_CHECKING:
 
 # Maps provider slug → (module_path, class_name)
 _REGISTRY: dict[str, tuple[str, str]] = {
-    "openai": ("src.llm.openai_provider", "OpenAIProvider"),
-    "azure_openai": ("src.llm.azure_openai", "AzureOpenAIProvider"),
-    "ollama": ("src.llm.local_ollama", "OllamaProvider"),
+    "openai":       ("src.llm.openai_provider",   "OpenAIProvider"),
+    "azure_openai": ("src.llm.azure_openai",       "AzureOpenAIProvider"),
+    "ollama":       ("src.llm.local_ollama",       "OllamaProvider"),
+    "groq":         ("src.llm.groq_provider",      "GroqProvider"),
+    "anthropic":    ("src.llm.anthropic_provider", "AnthropicProvider"),
+    "bedrock":      ("src.llm.bedrock_provider",   "BedrockProvider"),
 }
 
 
@@ -66,5 +69,25 @@ def get_llm_provider(provider_slug: str | None = None) -> "BaseLLMProvider":
 
     if slug == "ollama":
         return cls(base_url=settings.ollama_base_url, model=settings.ollama_model)
+
+    if slug == "groq":
+        if not settings.groq_api_key:
+            raise ConfigurationError("GROQ_API_KEY is not set.")
+        return cls(api_key=settings.groq_api_key, model=settings.groq_model)
+
+    if slug == "anthropic":
+        if not settings.anthropic_api_key:
+            raise ConfigurationError("ANTHROPIC_API_KEY is not set.")
+        return cls(api_key=settings.anthropic_api_key, model=settings.anthropic_model)
+
+    if slug == "bedrock":
+        if not settings.aws_access_key_id:
+            raise ConfigurationError("AWS_ACCESS_KEY_ID is not set.")
+        return cls(
+            aws_access_key_id=settings.aws_access_key_id,
+            aws_secret_access_key=settings.aws_secret_access_key,
+            region=settings.aws_region,
+            model_id=settings.bedrock_model_id,
+        )
 
     raise ConfigurationError(f"Provider '{slug}' is registered but has no factory branch.")

@@ -1,14 +1,15 @@
-# Framework Multi-Tenant de Chatbot
+# Chatbot & AI Agent Template
 
-Framework para deploy rápido de chatbots personalizados por cliente, com suporte a múltiplos canais e provedores de LLM.
+Template para criar chatbots e agentes de IA com suporte a múltiplos provedores de LLM e canais de mensagem.
+Template for building chatbots and AI agents with support for multiple LLM providers and messaging channels.
 
 ---
 
-## Fluxo de uma mensagem
+## Fluxo de uma mensagem / Message flow
 
 ```mermaid
 sequenceDiagram
-    participant U as Usuário
+    participant U as Usuário / User
     participant C as Channel Adapter<br/>(web/whatsapp/telegram/slack)
     participant O as Orchestrator
     participant MW as Middleware Stack
@@ -17,193 +18,91 @@ sequenceDiagram
     participant L as LLM Provider
 
     U->>C: Mensagem (webhook / HTTP)
-    C->>O: Message (normalizada)
-    O->>MW: TenantMiddleware (carrega config do cliente)
-    MW->>MW: LoggingMiddleware
+    C->>O: Message (normalizada / normalized)
+    O->>MW: LoggingMiddleware
     MW->>R: resolve_handler(ctx)
-    R-->>H: handler (flow keyword ou fallback)
+    R-->>H: handler (flow keyword ou fallback / or fallback)
     H->>L: chat(system_prompt, history)
     L-->>H: LLMResponse
     H-->>O: reply_text
     O-->>C: Response
-    C-->>U: Resposta formatada
+    C-->>U: Resposta formatada / Formatted response
 ```
 
 ---
 
-## Arquitetura de camadas
+## Arquitetura de camadas / Layer architecture
 
 ```mermaid
 graph TD
-    subgraph Canais["Canais (entrada/saída)"]
+    subgraph Canais["Canais / Channels"]
         WEB[Web Chat]
         WA[WhatsApp Twilio]
         TG[Telegram]
         SL[Slack]
     end
 
-    subgraph Core["Core (engine)"]
+    subgraph Core
         ORC[Orchestrator]
         ENG[Engine]
         MW[Middleware Stack]
         RT[Router]
+        AG[Agent — ReAct loop]
     end
 
-    subgraph Domínio["Domínio"]
+    subgraph Domínio["Domínio / Domain"]
         DOM_P[domain/prompts]
         DOM_F[domain/flows]
         DOM_H[domain/handlers]
     end
 
-    subgraph Clientes["Clientes (customers/)"]
-        ACME[acme/config + prompts + flows]
-        GLOBEX[globex/config + prompts + flows]
-        NEW[novo_cliente/...]
-    end
-
     subgraph LLM["LLM Providers"]
         OAI[OpenAI]
         AZ[Azure OpenAI]
+        ANT[Anthropic]
+        GRQ[Groq]
         OLL[Ollama local]
+        BED[AWS Bedrock]
     end
 
-    subgraph Storage["Storage"]
-        DB[(PostgreSQL)]
-        CACHE[(Redis)]
-        VEC[(Vector Store RAG)]
+    subgraph Storage
+        DB[(PostgreSQL / SQLite)]
+        VEC[(Vector Store — RAG)]
     end
 
     Canais --> ORC
     ORC --> ENG
     ENG --> MW
     MW --> RT
-    RT --> Clientes
     RT --> Domínio
-    Clientes --> LLM
     Domínio --> LLM
     ENG --> Storage
+    AG --> LLM
 ```
 
 ---
 
-## Como um novo cliente é adicionado
-
-```mermaid
-flowchart LR
-    A([1. Rodar\nnew_client.py]) --> B[customers/slug/\nconfig + prompts + flows]
-    B --> C([2. Editar\nprompts.py])
-    C --> D([3. Editar\nconfig.py])
-    D --> E([4. Editar\nflows.py])
-    E --> F([5. Setar\n.env])
-    F --> G([6. docker-compose up])
-    G --> H{✅ Bot no ar}
-```
-
----
-
-## Estrutura de pastas
-
-```text
-multi_tenant_app/
-├── backend/
-│   ├── Dockerfile
-│   ├── requirements.txt
-│   ├── .env.example                  ← copiar para .env e preencher
-│   ├── examples/
-│   │   ├── simple_console_bot/       ← testar qualquer tenant no terminal
-│   │   └── whatsapp_bot/             ← app mínimo só com WhatsApp
-│   └── src/
-│       ├── main.py                   ← entrada FastAPI (lifespan, routers)
-│       ├── api/
-│       │   └── admin.py              ← endpoints de gestão de tenants
-│       ├── channels/
-│       │   ├── base.py               ← contrato BaseChannel (ABC)
-│       │   ├── web_chat.py           ← POST /chat/{slug} ✅ implementado
-│       │   ├── telegram.py           ← sketch com roteiro
-│       │   ├── whatsapp_twilio.py    ← sketch com roteiro
-│       │   └── slack.py              ← sketch com roteiro
-│       ├── config/
-│       │   └── settings.py           ← Pydantic BaseSettings + todas as env vars
-│       ├── core/
-│       │   ├── message.py            ← Message, Response, ConversationTurn
-│       │   ├── context.py            ← ConversationContext (estado do turno)
-│       │   ├── engine.py             ← pipeline middleware → router → handler
-│       │   ├── orchestrator.py       ← entry point chamado pelos canais
-│       │   ├── router.py             ← resolve handler por keyword
-│       │   ├── middleware.py         ← protocolo + LoggingMiddleware
-│       │   ├── tenant_middleware.py  ← carrega TenantConfig no contexto
-│       │   ├── agent.py              ← ReAct loop / tool calling (sketch)
-│       │   └── errors.py             ← hierarquia de exceções
-│       ├── customers/
-│       │   ├── base.py               ← TenantConfig (dataclass contrato)
-│       │   ├── loader.py             ← auto-discovery + registry cacheado
-│       │   ├── acme/                 ← cliente exemplo completo
-│       │   │   ├── config.py
-│       │   │   ├── prompts.py
-│       │   │   └── flows.py
-│       │   └── globex/               ← segundo exemplo (configs diferentes)
-│       ├── domain/
-│       │   ├── prompts.py            ← BASE_SYSTEM_PROMPT (fallback genérico)
-│       │   ├── flows.py              ← FLOWS padrão (saudações, etc.)
-│       │   └── handlers.py           ← llm_reply(), greeting(), fallback()
-│       ├── llm/
-│       │   ├── base.py               ← BaseLLMProvider (ABC)
-│       │   ├── __init__.py           ← factory get_llm_provider()
-│       │   ├── openai_provider.py    ← ✅ implementado
-│       │   ├── azure_openai.py       ← ✅ implementado
-│       │   └── local_ollama.py       ← ✅ implementado
-│       ├── rag/
-│       │   ├── retriever.py          ← busca semântica (sketch)
-│       │   └── indexer.py            ← indexação de documentos (sketch)
-│       ├── storage/
-│       │   ├── database.py           ← engine async + get_db() dependency
-│       │   ├── tenancy.py            ← TenantRepository (queries isoladas)
-│       │   ├── tenant_provisioning.py← provisionar tenant no banco
-│       │   └── models/
-│       │       ├── base_model.py     ← Base SQLAlchemy + timestamps
-│       │       ├── configs.py        ← TenantConfigRecord
-│       │       ├── users.py          ← User
-│       │       └── messages.py       ← MessageRecord (histórico)
-│       ├── tools/
-│       │   └── __init__.py           ← registry de tools para o Agent
-│       └── utils/
-│           ├── logging.py            ← setup_logging() + get_logger()
-│           ├── ids.py                ← new_session_id(), new_event_id()
-│           └── time.py               ← utcnow(), greeting_for_hour()
-├── docs/
-│   ├── checklist-novo-cliente.md     ← o que coletar antes de implementar
-│   └── guia-implementacao.md         ← passo a passo do zero ao go-live
-├── infra/
-│   └── docker/
-│       └── docker-compose.yml        ← backend + postgres + redis
-├── scripts/
-│   └── new_client.py                 ← scaffolding de novo cliente
-└── .gitignore
-```
-
----
-
-## Início rápido (local)
+## Início rápido / Quick start
 
 ```bash
-# 1. Instalar dependências
-python -m venv .venv && source .venv/bin/activate
-pip install -r backend/requirements.txt
+# 1. Instalar dependências / Install dependencies
+uv sync --extra dev
 
-# 2. Configurar ambiente
+# 2. Configurar ambiente / Configure environment
 cp backend/.env.example backend/.env
-# editar backend/.env com OPENAI_API_KEY e demais variáveis
+# editar backend/.env com as API keys / edit backend/.env with API keys
 
-# 3. Subir o servidor
-cd backend && uvicorn src.main:app --reload --port 8000
+# 3. Subir o backend / Start the backend
+cd backend && uv run uvicorn src.main:app --reload --port 8000
 
-# 4. Testar com o cliente de exemplo
-curl -X POST http://localhost:8000/chat/acme \
-  -H "Content-Type: application/json" \
-  -d '{"user_id": "eu", "text": "olá"}'
+# 4. Subir o frontend (outra aba) / Start the frontend (another tab)
+cd frontend && uv run python serve.py
+
+# Ou ambos com um comando / Or both with one command
+make run
 ```
 
-Ou com Docker (inclui PostgreSQL e Redis):
+Ou com Docker (inclui PostgreSQL) / Or with Docker (includes PostgreSQL):
 
 ```bash
 docker-compose -f infra/docker/docker-compose.yml up --build
@@ -211,56 +110,209 @@ docker-compose -f infra/docker/docker-compose.yml up --build
 
 ---
 
-## Adicionar um novo cliente
+## Configuração do bot / Bot configuration
+
+**`backend/src/config/settings.py` é o único arquivo de configuração.**
+**`backend/src/config/settings.py` is the single configuration file.**
+
+Edite `CONFIG = BotConfig(...)` para personalizar / Edit `CONFIG = BotConfig(...)` to customize:
+
+| Campo / Field | Descrição / Description |
+|---|---|
+| `name` | Nome exibido ao usuário / Display name |
+| `system_prompt` | Instrução base do LLM / Base LLM instruction |
+| `flows` | Dict `keyword → handler` para respostas fixas / Fixed-response keyword map |
+| `llm_provider` | Sobrepõe `LLM_PROVIDER` do `.env` / Overrides `.env` `LLM_PROVIDER` |
+| `llm_model` | Sobrepõe `LLM_MODEL` do `.env` / Overrides `.env` `LLM_MODEL` |
+| `rag_enabled` | Habilita busca semântica / Enables semantic search |
+| `history_window` | Número de turnos no contexto / Number of turns in context |
+
+Via CLI:
 
 ```bash
-# Cria a estrutura de arquivos automaticamente
-python scripts/new_client.py <slug> "<Nome do Cliente>"
-
-# Exemplo:
-python scripts/new_client.py initech "Initech Ltda"
+make config-show                        # ver config atual / show current config
+make config-set k=name v="Meu Bot"      # alterar campo / change field
+make config-reset                       # voltar aos defaults / reset to defaults
 ```
 
-Depois edite os 3 arquivos gerados em `backend/src/customers/initech/`:
+---
 
-| Arquivo | O que fazer |
-|---------|-------------|
-| `prompts.py` | Escrever o system prompt (tom, escopo, guard rails) |
-| `config.py` | Definir canais, modelo LLM, flags e extras do cliente |
-| `flows.py` | Adicionar respostas fixas por palavra-chave |
+## Provedores de LLM suportados / Supported LLM providers
 
-Reinicie o servidor — o loader detecta o novo pacote automaticamente.
+| Provider | Env vars necessárias / Required env vars |
+|---|---|
+| `openai` | `OPENAI_API_KEY`, `OPENAI_MODEL` |
+| `azure_openai` | `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT` |
+| `anthropic` | `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` |
+| `groq` | `GROQ_API_KEY`, `GROQ_MODEL` |
+| `ollama` | `OLLAMA_BASE_URL`, `OLLAMA_MODEL` |
+| `bedrock` | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `BEDROCK_MODEL_ID` |
+
+Configure via `LLM_PROVIDER=openai` no `.env` ou diretamente em `BotConfig(llm_provider=...)`.
 
 ---
 
-## Provedores de LLM suportados
+## Canais suportados / Supported channels
 
-```mermaid
-graph LR
-    F["get_llm_provider(slug)"] --> OAI["OpenAI\ngpt-4o / gpt-4o-mini"]
-    F --> AZ["Azure OpenAI\ndeployment próprio"]
-    F --> OLL["Ollama\nlocal / offline"]
-    F --> ADD["+ novo provider\n(subclasse BaseLLMProvider)"]
+| Canal / Channel | Status | Endpoint |
+|---|---|---|
+| Web Chat | ✅ Implementado / Implemented | `POST /chat` |
+| Telegram | 🔧 Sketch com roteiro / Sketch with guide | `POST /channels/telegram` |
+| WhatsApp (Twilio) | 🔧 Sketch com roteiro / Sketch with guide | `POST /channels/whatsapp` |
+| Slack | 🔧 Sketch com roteiro / Sketch with guide | `POST /channels/slack` |
+
+---
+
+## Endpoints da API / API endpoints
+
+| Método / Method | Endpoint | Descrição / Description |
+|---|---|---|
+| `GET` | `/health` | Liveness check |
+| `POST` | `/chat` | Web chat — `{user_id, text, session_id?}` |
+| `GET` | `/api/history/{session_id}` | Histórico da sessão / Session history |
+| `GET` | `/api/sessions/{user_id}` | Sessões do usuário / User sessions |
+| `DELETE` | `/api/sessions/{session_id}` | Apagar sessão / Delete session |
+| `POST` | `/api/feedback` | Feedback (👍 / 👎) numa mensagem |
+| `PUT` | `/api/users` | Upsert de usuário / Upsert user |
+| `GET` | `/api/config` | Config pública do bot / Public bot config |
+| `GET` | `/api/stats` | Estatísticas de uso / Usage stats |
+
+Testar / Test:
+
+```bash
+make chat     # POST /chat com mensagem de teste / with test message
+make health   # GET /health
 ```
 
-Configurado via `LLM_PROVIDER` no `.env` ou por tenant em `config.py`.
+---
+
+## Guias de agentes de IA / AI agent guides
+
+`backend/src/core/agents/` contém guias comentados para criar agentes com cada framework.
+`backend/src/core/agents/` contains commented guides for building agents with each framework.
+
+| Arquivo / File | Framework | Conteúdo / Content |
+|---|---|---|
+| [`raw_agent.py`](backend/src/core/agents/raw_agent.py) | Sem framework / No framework | ReAct loop direto na API — OpenAI function calling, Anthropic tool_use, streaming |
+| [`langgraph_agent.py`](backend/src/core/agents/langgraph_agent.py) | LangGraph | StateGraph, checkpointing, multi-agente com supervisor, paralelismo |
+| [`langchain_agent.py`](backend/src/core/agents/langchain_agent.py) | LangChain | LCEL chains, `@tool`, AgentExecutor, RAG chain, saída estruturada |
+| [`pydantic_ai_agent.py`](backend/src/core/agents/pydantic_ai_agent.py) | PydanticAI | Agentes tipados, injeção de dependências, multi-turno, integração FastAPI |
+| [`google_sdk_agent.py`](backend/src/core/agents/google_sdk_agent.py) | Google SDK / ADK | google-genai, function calling, multimodal, Google Search grounding, Vertex AI |
 
 ---
 
-## Canais suportados
+## Estrutura de pastas / Folder structure
 
-| Canal | Status | Endpoint |
-|-------|--------|----------|
-| Web Chat | ✅ Implementado | `POST /chat/{slug}` |
-| Telegram | 🔧 Sketch pronto | `POST /channels/telegram/{slug}` |
-| WhatsApp (Twilio) | 🔧 Sketch pronto | `POST /channels/whatsapp/{slug}` |
-| Slack | 🔧 Sketch pronto | `POST /channels/slack/{slug}` |
+```text
+multi_tenant_app/
+├── Makefile                              ← atalhos comuns / common shortcuts
+├── backend/
+│   ├── pyproject.toml                    ← dependências uv / uv dependencies
+│   ├── .env.example                      ← copiar para .env / copy to .env
+│   └── src/
+│       ├── main.py                       ← entrada FastAPI / FastAPI entry point
+│       ├── cli.py                        ← CLI para config do bot / bot config CLI
+│       ├── api/
+│       │   └── main_api.py               ← todos os endpoints REST / all REST endpoints
+│       ├── channels/
+│       │   ├── base.py                   ← BaseChannel (ABC)
+│       │   ├── web_chat.py               ← POST /chat ✅
+│       │   ├── telegram.py               ← sketch com roteiro / sketch with guide
+│       │   ├── whatsapp_twilio.py        ← sketch com roteiro / sketch with guide
+│       │   └── slack.py                  ← sketch com roteiro / sketch with guide
+│       ├── config/
+│       │   └── settings.py               ← Settings + BotConfig (arquivo único de config)
+│       ├── core/
+│       │   ├── message.py                ← Message, Response, ConversationTurn
+│       │   ├── context.py                ← ConversationContext (estado do turno / turn state)
+│       │   ├── engine.py                 ← pipeline middleware → router → handler
+│       │   ├── orchestrator.py           ← entry point dos canais / channels entry point
+│       │   ├── router.py                 ← resolve handler por keyword / by keyword
+│       │   ├── middleware.py             ← protocolo + LoggingMiddleware
+│       │   ├── agent.py                  ← ReAct loop / tool calling (sketch)
+│       │   ├── errors.py                 ← hierarquia de exceções / exception hierarchy
+│       │   └── agents/                   ← guias de frameworks de agentes / agent framework guides
+│       │       ├── raw_agent.py          ← sem framework / no framework
+│       │       ├── langgraph_agent.py    ← LangGraph
+│       │       ├── langchain_agent.py    ← LangChain
+│       │       ├── pydantic_ai_agent.py  ← PydanticAI
+│       │       └── google_sdk_agent.py   ← Google SDK / ADK
+│       ├── domain/
+│       │   ├── prompts.py                ← BASE_SYSTEM_PROMPT (fallback genérico / generic fallback)
+│       │   ├── flows.py                  ← flows padrão / default flows (greetings, etc.)
+│       │   └── handlers.py               ← llm_reply(), greeting(), fallback()
+│       ├── llm/
+│       │   ├── base.py                   ← BaseLLMProvider (ABC)
+│       │   ├── __init__.py               ← factory get_llm_provider()
+│       │   ├── openai_provider.py        ← ✅
+│       │   ├── azure_openai.py           ← ✅
+│       │   ├── anthropic_provider.py     ← ✅
+│       │   ├── groq_provider.py          ← ✅
+│       │   ├── bedrock_provider.py       ← ✅
+│       │   └── local_ollama.py           ← ✅
+│       ├── rag/
+│       │   ├── retriever.py              ← busca semântica (sketch / sketch)
+│       │   └── indexer.py                ← indexação de documentos (sketch / sketch)
+│       ├── storage/
+│       │   ├── database.py               ← engine async SQLAlchemy + get_db()
+│       │   ├── tenancy.py                ← repositório de dados / data repository
+│       │   └── models/
+│       │       ├── base_model.py         ← Base + timestamps
+│       │       ├── users.py              ← User
+│       │       └── messages.py           ← MessageRecord (histórico / history)
+│       ├── tools/
+│       │   └── __init__.py               ← registry de tools para o Agent / tools registry
+│       └── utils/
+│           ├── logging.py                ← setup_logging() + get_logger()
+│           ├── ids.py                    ← new_session_id(), new_event_id()
+│           └── time.py                   ← utcnow(), greeting_for_hour()
+├── frontend/
+│   ├── public/                           ← HTML + JS + CSS do chat web / web chat UI
+│   └── serve.py                          ← servidor estático dev / dev static server
+├── infra/
+│   └── docker/
+│       └── docker-compose.yml            ← backend + postgres
+├── scripts/
+│   └── new_client.py                     ← scaffolding de novo projeto / new project scaffold
+└── uv.lock                               ← versões pinadas / pinned versions
+```
 
 ---
 
-## Documentação
+## Banco de dados / Database
 
-| Documento | Descrição |
-|-----------|-----------|
-| [docs/checklist-novo-cliente.md](docs/checklist-novo-cliente.md) | O que levantar com o cliente antes de implementar |
-| [docs/guia-implementacao.md](docs/guia-implementacao.md) | Passo a passo do zero ao go-live |
+SQLAlchemy async. Dev usa SQLite, produção usa PostgreSQL.
+SQLAlchemy async. Dev uses SQLite, production uses PostgreSQL.
+
+```bash
+# Criar/atualizar tabelas / Create/update tables
+make db-upgrade
+
+# Gerar nova migração / Generate new migration
+make db-migrate m="descricao da mudanca"
+```
+
+---
+
+## Testes / Tests
+
+```bash
+make test                           # todos os testes / all tests
+make test-file f=test_engine.py     # arquivo específico / specific file
+```
+
+> Os testes ainda não foram escritos — os diretórios e dependências estão no lugar.
+> Tests haven't been written yet — directories and dependencies are in place.
+
+---
+
+## O que ainda não está implementado / Not yet implemented
+
+| Componente | Status |
+|---|---|
+| Canais Telegram, WhatsApp, Slack / Telegram, WhatsApp, Slack channels | 🔧 Sketches com roteiro / Sketches with guide |
+| RAG (`rag/indexer.py`, `rag/retriever.py`) | 🔧 Sketch |
+| ReAct agent loop (`core/agent.py`) | 🔧 Sketch |
+| Tool registry (`tools/__init__.py`) | 🔧 Vazio / Empty |
+| Testes / Tests | ❌ Não escritos / Not written |
+| CI/CD | ❌ Não configurado / Not configured |

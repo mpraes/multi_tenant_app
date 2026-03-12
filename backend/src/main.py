@@ -1,16 +1,16 @@
 """
+Ponto de entrada da aplicação FastAPI.
 FastAPI application entry point.
 
-Startup sequence:
-  1. Logging configured
-  2. DB tables created (dev) or migrations applied (prod)
-  3. Tenant registry loaded (cached from customers/)
-  4. Routers mounted
+Sequência de startup / Startup sequence:
+  1. Logging configurado / Logging configured
+  2. Tabelas do banco criadas (dev) ou migrações aplicadas (prod) / DB tables created or migrations applied
+  3. Routers montados / Routers mounted
 
-Run locally:
+Rodar localmente / Run locally:
     uvicorn src.main:app --reload --port 8000
 
-Or via Docker:
+Ou via Docker / Or via Docker:
     docker-compose up
 """
 
@@ -21,35 +21,35 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.api.main_api import router as api_router
 from src.channels.web_chat import router as web_chat_router
-from src.config.settings import settings
-from src.customers.loader import list_tenants, reload_tenants
+from src.config.settings import CONFIG, settings
 from src.storage.database import init_db
 from src.utils.logging import get_logger, setup_logging
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup / shutdown lifecycle manager."""
+    """
+    Gerenciador de ciclo de vida startup/shutdown.
+    Startup / shutdown lifecycle manager.
+    """
     setup_logging()
     logger = get_logger("main")
-    logger.info("Starting multi-tenant chatbot — env=%s", settings.app_env)
+    logger.info("Iniciando chatbot '%s' — env=%s / Starting chatbot '%s' — env=%s",
+                CONFIG.name, settings.app_env, CONFIG.name, settings.app_env)
 
+    # Inicializa o banco (cria tabelas em dev; use Alembic em prod)
     # Initialise database (creates tables in dev; use Alembic in prod)
     await init_db()
 
-    # Warm the tenant registry cache
-    reload_tenants()
-    tenants = list_tenants()
-    logger.info("Loaded %d tenant(s): %s", len(tenants), [t.slug for t in tenants])
+    yield  # app rodando / app is running
 
-    yield  # app is running
-
-    logger.info("Shutting down.")
+    logger.info("Encerrando. / Shutting down.")
 
 
 app = FastAPI(
-    title="Multi-Tenant Chatbot Framework",
+    title=CONFIG.name,
     version="0.1.0",
     lifespan=lifespan,
     # Disable docs in production to avoid leaking internals
@@ -61,12 +61,13 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"] if settings.app_env == "development" else [],
-    allow_methods=["POST", "GET"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
 # ── Channel routers ───────────────────────────────────────────────────────────
 app.include_router(web_chat_router)
+app.include_router(api_router)
 # Uncomment as you integrate more channels:
 # from src.channels.telegram import router as telegram_router
 # app.include_router(telegram_router)
@@ -76,11 +77,8 @@ app.include_router(web_chat_router)
 
 @app.get("/health")
 async def health() -> dict:
-    """Simple health check — used by Docker/K8s liveness probes."""
+    """
+    Health check para probes do Docker/K8s.
+    Liveness probe for Docker/K8s.
+    """
     return {"status": "ok", "env": settings.app_env}
-
-
-@app.get("/tenants")
-async def tenants_list() -> list[dict]:
-    """List registered tenants. Disable or protect this in production."""
-    return [{"slug": t.slug, "name": t.name} for t in list_tenants()]

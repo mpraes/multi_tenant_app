@@ -17,21 +17,20 @@ from src.core.context import ConversationContext
 from src.core.message import MessageRole
 from src.core.middleware import LoggingMiddleware, MessageMiddleware
 from src.core.router import resolve_handler
-from src.core.tenant_middleware import TenantMiddleware
 
 
 class Engine:
     """
+    Liga middleware, roteamento e chamadas LLM em um único pipeline.
     Wires middleware, routing, and LLM calls into a single pipeline.
 
-    The middleware_stack is executed in order. TenantMiddleware MUST be first.
+    Adicione novo middleware aqui (ex: RateLimitMiddleware, AuthMiddleware).
     Add new middleware here (e.g. RateLimitMiddleware, AuthMiddleware).
     """
 
     middleware_stack: list[MessageMiddleware] = [
-        TenantMiddleware(),
         LoggingMiddleware(),
-        # Add more middleware here:
+        # Adicione mais middleware aqui / Add more middleware here:
         # RateLimitMiddleware(),
         # MetricsMiddleware(),
     ]
